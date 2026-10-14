@@ -1,108 +1,37 @@
 # Agentic mentions
 
-Collect and triage brand mentions and inbound comments.
+Collect, deduplicate, and triage inbound mentions and comments for accounts you own.
 
-Clone this repo to start a new pack. It gives one core with three
-faces: a terminal command, an npm import, and an MCP server.
-
-## What you get
-
-- One core: brand config, logs, guards, routing, dry run, cost reports.
-- Three faces over that core: CLI, library, MCP server.
-- A frozen core contract, so packs share one API.
-- A worker entry and a wrangler sample for edge deploys.
-- Build, typecheck, and tests that pass from a fresh clone.
-
-## Quick start
+## Install and run
 
 ```sh
-git clone https://github.com/pooriaarab/agentic-mentions.git my-pack
-cd my-pack
 npm install
 npm run build
-npm run typecheck
-npm test
+node dist/cli.js --help
+node dist/cli.js mentions ingest --file mentions.json
+node dist/cli.js mentions queue
+node dist/cli.js mentions triage --text "Could I get pricing?"
+node dist/cli.js mentions handle --id <id>        # preview (default)
+node dist/cli.js mentions handle --id <id> --live # mark handled
 ```
 
-Run the command:
-
-```sh
-node dist/cli.js summary --text "hello world hello"
-```
-
-Call the library:
+## Library
 
 ```js
-import { summarizeText } from "./dist/index.js";
-
-console.log(summarizeText("hello world hello"));
+import { createMentionStore, ingestMentions, queueMentions, triageMention } from "agentic-mentions";
+const store = createMentionStore();
+ingestMentions([{ text: "I need help with billing", source: "fixture" }], store);
+console.log(queueMentions(store));
+console.log(triageMention({ id: "preview", text: "Great work!" }));
 ```
 
-Start the MCP server:
+`GenericWebhookAdapter` parses generic webhook payloads (`{items: [...]}` or an array) and accepts an injected `fetchFn` for testability. `FixtureMentionAdapter` provides deterministic fixtures. Adapter failures throw `VendorError`.
 
-```sh
-node dist/cli.js mcp
-```
+## MCP tools
 
-## Three usecases
+- `ingest_mentions`
+- `triage_mention`
+- `mention_queue`
+- `mark_mention_handled` (dry-run by default; `live: true` and approval required)
 
-1. You run one text summary from the terminal.
-2. You import the summary function in a script.
-3. You let an agent call the same function as an MCP tool.
-
-## Clone checklist
-
-This repo is a template. Replace each slot in each file that holds it.
-
-- `agentic-mentions`: the directory name, like `my-pack`.
-- `agentic-mentions`: the npm name, like `agentic-<block>` (bare name, never @pooriaarab/ scoped unless the brief says scoped).
-- `agentic-mentions`: the terminal command, like `my-pack`.
-- `Collect and triage brand mentions and inbound comments.`: one plain sentence, under 100 chars.
-- `mentions,listening,triage,agentic-suite,cli,mcp`: plain keywords, like `notes, search, cli`.
-- `pooriaarab`: the repo owner, like `pooriaarab`.
-
-Slot files: `AGENTS.md`, `SKILL.md`, `RULES.md`, `llms.txt`,
-`server.json`, `.mcp.json`, `wrangler.jsonc`.
-
-Then rename the scaffold identity itself:
-
-- `package.json`: name, bin commands, mcpName. Remove `"private": true`.
-- `src/index.ts`: the `DEFAULT_BRAND` fields.
-- This file: the pitch and the examples above.
-
-At publish time, set `server.json` version to the npm version and
-`server.json` repository id from `gh api repos/OWNER/REPO --jq .id`.
-
-## Gates
-
-Run all three before you push a pack:
-
-```sh
-npm run build && npm run typecheck && npm test
-```
-
-Then run the real installed CLI once from a tarball:
-
-```sh
-npm pack
-npx --yes --package ./pooriaarab-agentic-mentions-0.1.0.tgz agentic-pack summary --text "hello"
-```
-
-## Release flow
-
-Push to `main` for review. Merge to `release` to publish. The
-publish workflow ships only when the version is new.
-
-## Layout
-
-- `src/index.ts`: the library face.
-- `src/cli.ts`: the terminal face.
-- `src/mcp.ts`: the MCP server. `src/mcp-bin.ts` starts it.
-- `src/worker.ts`: the edge worker face.
-- `src/core.ts`: the shared core.
-- `agentic-core.d.ts`: the frozen contract.
-- `docs/agentic-core.md`: the contract in plain words.
-
-## License
-
-MIT. See `LICENSE`.
+This pack only drafts routes (`reply`, `ignore`, or `escalate`); it never sends replies. Any publishable content created by a downstream AI workflow must include an appropriate AI disclosure.
