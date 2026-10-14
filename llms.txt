@@ -1,0 +1,15 @@
+# agentic-mentions
+
+Collect and triage brand mentions and inbound comments.
+
+Keywords: mentions,listening,triage,agentic-suite,cli,mcp.
+
+- SDK: import { summarizeText, dispatchText } from "agentic-mentions".
+- CLI: agentic-mentions summary --text "...".
+- MCP: run agentic-mentions mcp, then call summarize_text.
+
+## Docs
+
+- README: https://github.com/pooriaarab/agentic-mentions
+- Core contract: https://github.com/pooriaarab/agentic-mentions/blob/main/docs/agentic-core.md
+- License: MIT
